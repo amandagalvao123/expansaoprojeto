@@ -288,7 +288,7 @@ main.rg > section[hidden]{display:none!important}
 .ov-copy textarea{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:.82rem;line-height:1.45;border:1px solid var(--color-border-line);border-radius:8px;padding:10px;background:var(--color-bg);color:var(--color-fg);resize:vertical}
 
 .ov-scroll{overflow-x:auto}
-#ovTab{min-width:760px}
+#ovTab{min-width:640px}
 #ovTab thead th{background:#2E2150;color:#fff;font-size:.74rem;padding:7px 8px}
 #ovTab td{font-size:.82rem;padding:6px 8px}
 #ovTab td.hlc,#ovTab th.hlc{background:color-mix(in srgb,#2E7DD7 12%,var(--color-panel));font-weight:700}
@@ -386,8 +386,6 @@ main.rg > section[hidden]{display:none!important}
           <th class="num" data-field="itens">Itens</th>
           <th class="num" data-field="quantidade">Qtd.</th>
           <th class="num hlc" data-field="investimento">Investimento</th>
-          <th class="num" data-field="estimativas">Estimativas</th>
-          <th class="num" data-field="itens_sem_valor">Sem valor</th>
           <th class="num" data-field="parcela">Parcela/mês</th>
           <th class="num" data-field="nov">Nov/26</th>
           <th class="num" data-field="dez">Dez/26</th>
@@ -1466,12 +1464,12 @@ function drawOverview() {
   const tb = document.querySelector('#ovTab tbody'), tf = document.querySelector('#ovTab tfoot');
   tb.innerHTML = ''; tf.innerHTML = '';
   if (T.status !== 'ok' || SM.status !== 'ok' || S.status !== 'ok') {
-    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 10;
+    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 8;
     if ([T,SM,S].some(d => d.status === 'error' || d.status === 'connect')) { const f = document.createElement('div'); f.className = 'rg-fail'; f.textContent = 'Failed to load'; td.appendChild(f); } else td.className = 'dash-skeleton';
     tr.appendChild(td); tb.appendChild(tr); return;
   }
   const n = S.data[0].n_min, f2 = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits: 2});
-  const cols = ['projeto','itens','quantidade','investimento','estimativas','itens_sem_valor','parcela','nov','dez','jan'];
+  const cols = ['projeto','itens','quantidade','investimento','parcela','nov','dez','jan'];
   const money = new Set(['investimento','estimativas','parcela','nov','dez','jan']);
   T.data.forEach(r => {
     const tr = document.createElement('tr');
@@ -1481,12 +1479,12 @@ function drawOverview() {
   });
   const sum = k => d3.sum(T.data, r => r[k]);
   const row = (cls, cells) => { const tr = document.createElement('tr'); tr.className = cls; cells.forEach(([v, num, extra]) => { const td = document.createElement('td'); if (num) td.className = 'num'; if (extra) td.classList.add(extra); td.textContent = v; tr.appendChild(td); }); tf.appendChild(tr); };
-  row('tot', [['TOTAL GERAL'], [intf.format(sum('itens')), 1], [intf.format(sum('quantidade')), 1], [f2.format(sum('investimento')), 1, 'hlc'], [f2.format(sum('estimativas')), 1], [intf.format(sum('itens_sem_valor')), 1], [f2.format(sum('parcela')), 1], [f2.format(sum('nov')), 1], [f2.format(sum('dez')), 1], [f2.format(sum('jan')), 1]]);
+  row('tot', [['TOTAL GERAL'], [intf.format(sum('itens')), 1], [intf.format(sum('quantidade')), 1], [f2.format(sum('investimento')), 1, 'hlc'], [f2.format(sum('parcela')), 1], [f2.format(sum('nov')), 1], [f2.format(sum('dez')), 1], [f2.format(sum('jan')), 1]]);
   const sm = ['2026-11','2026-12','2027-01'].map(m => SM.data.find(x => x.parcelas === n && x.mes === m));
-  row('conta', [['(−) Conta negativa (Marlay) no mês'], [''], [''], [''], [''], [''], [''], ...sm.map(x => [x && x.conta ? f2.format(x.conta) : 'R$ 0,00 *', 1])]);
+  row('conta', [['(−) Conta negativa (Marlay) no mês'], [''], [''], [''], [''], ...sm.map(x => [x && x.conta ? f2.format(x.conta) : 'R$ 0,00 *', 1])]);
   row('nota', [['* Jan/27: considerado saldo 0 na conta Marlay (sem nova falta). Não foi informado valor para jan porque se considera que as lojas já estarão abertas e se pagando. Se a conta ficar negativa, o saldo da verba cai no mesmo valor.']]);
-  tf.querySelector('tr.nota td').colSpan = 10;
-  row('saldo', [['🏦 Saldo da verba de ' + brl.format(VERBA) + ' após o mês'], [''], [''], [''], [''], [''], [''], ...sm.map(x => [f2.format(x.saldo_final), 1])]);
+  tf.querySelector('tr.nota td').colSpan = 8;
+  row('saldo', [['🏦 Saldo da verba de ' + brl.format(VERBA) + ' após o mês'], [''], [''], [''], [''], ...sm.map(x => [f2.format(x.saldo_final), 1])]);
   [...tf.querySelectorAll('tr.saldo td')].slice(-3).forEach((td, i) => { td.style.color = sm[i].saldo_final < 0 ? 'var(--color-bad)' : 'var(--color-ok)'; });
 }
 
