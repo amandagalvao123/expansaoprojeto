@@ -299,6 +299,47 @@ main.rg > section[hidden]{display:none!important}
 #ovTab tfoot tr.conta td{color:var(--color-bad)}
 #ovTab tfoot tr.saldo td{font-size:.9rem}
 #ovTab tfoot tr.nota td{font-weight:400;font-size:.74rem;color:var(--color-fg-muted);border-top:none;text-align:left}
+
+.ov-mob{display:none}
+@media (max-width:640px){
+  #dash-root{--dash-gutter:12px}
+  .rg-layout{gap:10px}
+  .side{flex-direction:column;align-items:stretch;gap:6px;padding:8px 0 6px;margin:0 -2px}
+  .side-brand{flex-direction:row;align-items:center}
+  .side-brand .rg-logo img{height:24px}
+  .side-brand .bt{display:inline;font-size:.85rem}
+  .side-nav{overflow-x:auto;gap:4px;padding-bottom:4px;scrollbar-width:none}
+  .side-nav::-webkit-scrollbar{display:none}
+  .rg section{scroll-margin-top:120px}
+  .side-nav button{width:auto;white-space:nowrap;flex:0 0 auto;font-size:.8rem;padding:7px 10px;border:1px solid var(--color-border-line);border-radius:999px;background:var(--color-panel)}
+  .side-nav button.on{border-color:#7A3E9D}
+  .ov-head .rg-logo{display:none}
+  .ov-head h2{font-size:1.05rem}
+  .ov-scroll{display:none}
+  .ov-mob{display:flex;flex-direction:column;gap:8px}
+  .rg-hero{padding:18px}
+  .rg-hero h1{font-size:1.5rem}
+  .rg-donut{width:130px;height:130px}
+  .rg-donut svg{width:130px;height:130px}
+  .rg-donut .c .p{font-size:1.8rem}
+  .mini{grid-template-columns:1fr 1fr}
+  .mini .v{font-size:1.05rem}
+  .big .v{font-size:1.6rem}
+  .rg h2{font-size:1.1rem}
+  .rg-card,.memo-col,.ov-card{padding:12px}
+  .rg .scroll{overflow-x:auto}
+  .rg table{font-size:.74rem}
+}
+.om{border:1px solid var(--color-border-line);border-left-width:5px;border-radius:10px;padding:10px 12px;background:var(--color-panel)}
+.om .t{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.9rem}
+.om .t b{font-weight:700;white-space:nowrap}
+.om .s{font-size:.74rem;color:var(--color-fg-muted);margin-top:2px}
+.om .m{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px}
+.om .m div{background:var(--color-bg);border-radius:6px;padding:5px 6px;font-size:.72rem;color:var(--color-fg-muted)}
+.om .m div b{display:block;color:var(--color-fg);font-size:.8rem;font-weight:700;white-space:nowrap}
+.om.tot{background:color-mix(in srgb,#2E7DD7 12%,var(--color-panel));border-left-color:#2E2150}
+.om.tot .m div b.neg{color:var(--color-bad)} .om.tot .m div b.pos{color:var(--color-ok)}
+.om-note{font-size:.72rem;color:var(--color-fg-muted);line-height:1.4}
 @media (prefers-reduced-motion:no-preference){.pc,.chip{transition:transform var(--cds-dur-slow) var(--cds-ease-out)}}
 </style>
 
@@ -395,6 +436,7 @@ main.rg > section[hidden]{display:none!important}
         <tfoot></tfoot>
       </table>
       </div>
+      <div class="ov-mob" id="ovMob"></div>
     </div>
     <div class="rg-chips" id="chips">
       <button class="chip" data-tone="warn" data-filter="estimativa"><span class="dot"></span><b data-source="resumo" data-field="estimativas">—</b> ainda em estimativa</button>
@@ -916,7 +958,7 @@ const go = (id) => {
   const p = PAGE_OF[id] || 'hero';
   if (p !== curPage) showPage(p);
   const el = document.getElementById(id);
-  if (el) requestAnimationFrame(() => el.scrollIntoView({block:'start'}));
+  if (el) requestAnimationFrame(() => { if ((PAGES[p] || [])[0] === id) { window.scrollTo(0, 0); const r = document.getElementById('dash-root'); if (r && r.scrollIntoView && r.getBoundingClientRect().top < 0) r.scrollIntoView({block:'start'}); } else el.scrollIntoView({block:'start'}); });
   dash.setLink(id);
 };
 document.querySelectorAll('#nav [data-go], #chips [data-go], #heroCall').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
@@ -1486,7 +1528,26 @@ function drawOverview() {
   tf.querySelector('tr.nota td').colSpan = 8;
   row('saldo', [['🏦 Saldo da verba de ' + brl.format(VERBA) + ' após o mês'], [''], [''], [''], [''], ...sm.map(x => [f2.format(x.saldo_final), 1])]);
   [...tf.querySelectorAll('tr.saldo td')].slice(-3).forEach((td, i) => { td.style.color = sm[i].saldo_final < 0 ? 'var(--color-bad)' : 'var(--color-ok)'; });
+
+  // versão celular (cartões)
+  const mob = document.getElementById('ovMob'); mob.innerHTML = '';
+  const mk = (cls, title, val, sub, cells) => {
+    const d = document.createElement('div'); d.className = 'om' + (cls ? ' ' + cls : '');
+    const t = document.createElement('div'); t.className = 't'; const a = document.createElement('span'); a.textContent = title; const b = document.createElement('b'); b.textContent = val; t.appendChild(a); t.appendChild(b); d.appendChild(t);
+    if (sub) { const s2 = document.createElement('div'); s2.className = 's'; s2.textContent = sub; d.appendChild(s2); }
+    if (cells) { const m = document.createElement('div'); m.className = 'm'; cells.forEach(([k, v, c]) => { const x = document.createElement('div'); x.textContent = k; const y = document.createElement('b'); y.textContent = v; if (c) y.className = c; x.appendChild(y); m.appendChild(x); }); d.appendChild(m); }
+    mob.appendChild(d); return d;
+  };
+  T.data.forEach((r, i) => {
+    const d = mk('', projEmoji(r.projeto) + ' ' + r.projeto, f2.format(r.investimento), intf.format(r.itens) + ' itens · parcela ' + f2.format(r.parcela) + '/mês', [['Nov/26', f2.format(r.nov)], ['Dez/26', f2.format(r.dez)], ['Jan/27', f2.format(r.jan)]]);
+    d.style.borderLeftColor = COL(PP_index(r.projeto, i));
+  });
+  mk('tot', 'TOTAL GERAL', f2.format(sum('investimento')), intf.format(sum('itens')) + ' itens · parcela ' + f2.format(sum('parcela')) + '/mês', [['Nov/26', f2.format(sum('nov'))], ['Dez/26', f2.format(sum('dez'))], ['Jan/27', f2.format(sum('jan'))]]);
+  mk('', '(−) Conta negativa (Marlay)', '', null, sm.map((x, k) => [['Nov/26','Dez/26','Jan/27'][k], x && x.conta ? f2.format(x.conta) : 'R$ 0,00 *', 'neg']));
+  mk('tot', '🏦 Saldo da verba após o mês', '', null, sm.map((x, k) => [['Nov/26','Dez/26','Jan/27'][k], f2.format(x.saldo_final), x.saldo_final < 0 ? 'neg' : 'pos']));
+  const note = document.createElement('div'); note.className = 'om-note'; note.textContent = tf.querySelector('tr.nota td').textContent; mob.appendChild(note);
 }
+const PP_index = (p, i) => i;
 
 let linked = false;
 renderAll = () => {
